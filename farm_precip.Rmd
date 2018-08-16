@@ -1,0 +1,40 @@
+---
+title: "Farm Precipitation Trends"
+output:
+  html_notebook: default
+  pdf_document: default
+---
+
+```{r, message=FALSE, echo=FALSE}
+library(tidyverse)
+library(lubridate)
+```
+
+```{r, message=FALSE, echo=FALSE}
+precip_2017 <- read_csv("farm_precip_2017.csv")
+```
+
+```{r, echo=FALSE}
+# Clean data
+precip_2017_clean <- precip_2017 %>% 
+  mutate(date_2017 = mdy(date_2017)) %>% 
+  mutate(month_2017 = month(date_2017, label = TRUE))
+
+summary_by_month <- precip_2017_clean %>% 
+  group_by(month_2017) %>% 
+  summarise(sum(precip_2017)) %>% 
+  rename(month_sum = `sum(precip_2017)`)
+```
+
+```{r, echo=FALSE}
+# Plot data
+precip_2017_bar <- summary_by_month %>% 
+  ggplot() +
+    geom_col(aes(x = month_2017, y = month_sum), fill = "blue") +
+    labs(x = "", y = "Precipitation Total (inches)", 
+         title = "Three Oaks Farms Precipitation, 2017") +
+    theme_minimal() 
+
+precip_2017_bar
+```
+

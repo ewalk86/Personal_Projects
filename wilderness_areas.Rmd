@@ -1,0 +1,25 @@
+---
+title: "Wilderness Areas"
+output: html_notebook
+---
+
+```{r, message=FALSE}
+library(maptools)
+library(ggmap)
+library(tidyverse)
+library(rgdal)
+library(rgeos)
+library(shapefiles)
+```
+
+
+```{r}
+wilderness <- read.shp("wilderness_areas_13april2018.shp")
+
+```
+
+
+```{r}
+
+```
+
