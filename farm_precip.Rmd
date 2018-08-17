@@ -39,12 +39,13 @@ summary_by_month <- precip_clean %>%
   summarise(sum(precip), n(), mean(precip), sd(precip), max(precip)) 
 summary_by_month
 
+## Work on an average for each month across years
 summary_month <- precip_clean %>% 
   group_by(month) %>% 
-  mutate(month_total = sum(precip)) %>% 
+  mutate(month_sum = sum(precip)) %>% 
   ungroup() %>% 
-  group_by() %>% 
-  mutate(month_mean = mean(month_total)) 
+  group_by(year) %>%
+  summarise(month_mean = (month_sum / distinct()))
 summary_month
 ```
 
