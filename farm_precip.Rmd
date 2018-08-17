@@ -1,14 +1,16 @@
 ---
-title: "Farm Precipitation Trends"
+title: "Three Oaks Farms Precipitation Trends"
 output:
-  html_notebook: default
+  word_document: default
   pdf_document: default
+  html_notebook: default
 ---
 
 ```{r, message=FALSE, echo=FALSE}
 library(tidyverse)
 library(lubridate)
 library(forcats)
+library(knitr)
 ```
 
 ```{r, message=FALSE, echo=FALSE}
@@ -26,30 +28,45 @@ precip_clean <- precip_data %>%
                                              "1 - 1.99", "2+"), 
                                right = FALSE)) 
 ```
-
-###Summary Data
+##Summary Statistics
+###Summary by Year
 ```{r, echo=FALSE}
 summary_by_year <- precip_clean %>% 
   group_by(year) %>% 
-  summarise(sum(precip), n(), mean(precip), sd(precip), max(precip)) 
-summary_by_year
+  summarise(sum(precip), n(), mean(precip), median(precip), max(precip)) %>% 
+  rename(Year = year, `Total Precip` = `sum(precip)`, `Precip Events` = `n()`, 
+         `Mean Precip Event` = `mean(precip)`, `Median Precip Event` = `median(precip)`, 
+         `Max Precip Event` = `max(precip)`)
+kable(summary_by_year, digits = 2)
+```
 
+###Summary by Month
+```{r, echo=FALSE}
 summary_by_month <- precip_clean %>% 
   group_by(month) %>% 
-  summarise(sum(precip), n(), mean(precip), sd(precip), max(precip)) 
-summary_by_month
+  summarise(sum(precip), n(), mean(precip), median(precip), max(precip)) %>% 
+  rename(Month = month, `Total Precip` = `sum(precip)`, `Precip Events` = `n()`, 
+         `Mean Precip Event` = `mean(precip)`, `Median Precip Event` = `median(precip)`, 
+         `Max Precip Event` = `max(precip)`)
+kable(summary_by_month, digits = 2)
+```
 
-## Work on an average for each month across years
+###Monthly Averages
+```{r, echo=FALSE}
 summary_month <- precip_clean %>% 
   group_by(month) %>% 
   mutate(month_sum = sum(precip)) %>% 
-  ungroup() %>% 
-  group_by(year) %>%
-  summarise(month_mean = (month_sum / distinct()))
-summary_month
+  mutate(year = as.character(year)) %>% 
+  mutate(year_num = n_distinct(year)) %>% 
+  select(month, month_sum, year_num) %>% 
+  mutate(month_mean = month_sum / year_num) %>% 
+  select(month, month_mean) %>% 
+  distinct(month, month_mean) %>% 
+  rename(Month = month, `Monthly Average` = month_mean)
+kable(summary_month, digits = 2)
 ```
 
-###Plots
+##Plots
 ```{r, echo=FALSE, fig.width=10, fig.height=8}
 # Bar Plot
 precip_bar <- precip_clean %>% 
@@ -60,7 +77,7 @@ precip_bar <- precip_clean %>%
              color = "black") +
     labs(x = "", y = "Precipitation Total (inches)", 
          title = "Three Oaks Farms Precipitation", 
-         subtitle = "2014 - Present") +
+         subtitle = "Combined Monthly Totals: 2014 - Present") +
     theme_minimal() +
     theme(axis.line = element_line(size = 1.2), 
           panel.grid.major.y = element_line(size = 0.5, color = "black"), 
@@ -69,7 +86,7 @@ precip_bar <- precip_clean %>%
           axis.text.y = element_text(size = 14, color = "black"), 
           title = element_text(size = 17, color = "black"), 
           legend.text = element_text(size = 15), 
-          legend.position = c(.85,.85)) +
+          legend.position = "right") +
     scale_fill_brewer(palette = "Blues")
 
 precip_bar
