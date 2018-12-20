@@ -1,12 +1,12 @@
 ---
 title: "Three Oaks Farms Precipitation Trends"
 output:
-  word_document: default
   pdf_document: default
   html_notebook: default
+  word_document: default
 ---
 
-```{r, message=FALSE, echo=FALSE}
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
 library(tidyverse)
 library(lubridate)
 library(forcats)

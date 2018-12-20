@@ -14,12 +14,12 @@ library(shapefiles)
 
 
 ```{r}
-wilderness <- read.shp("wilderness_areas_13april2018.shp")
-
+list <- read.shp(shp = "wilderness_21aug2018.shp")
+wilderness <- do.call(rbind, list)
 ```
 
 
 ```{r}
-
+summary(wilderness)
 ```
 
