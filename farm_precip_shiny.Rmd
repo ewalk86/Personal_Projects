@@ -1,0 +1,128 @@
+---
+title: "Three Oaks Farms Precipitation Shiny App"
+runtime: shiny
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+library(tidyverse)
+library(lubridate)
+library(forcats)
+library(knitr)
+library(shiny)
+```
+
+```{r, message=FALSE, echo=FALSE}
+precip_data <- read_csv("farm_precip_3march2019.csv")
+```
+
+```{r, echo=FALSE}
+# Clean data
+precip_clean <- precip_data %>% 
+  mutate(date = mdy(date)) %>% 
+  mutate(month = month(date, label = TRUE)) %>%
+  mutate(year = year(date)) %>%
+  mutate(precip_cat = cut(precip, breaks = c(0,.5,1,2,5), 
+                               labels = c("<0.5", "0.5 - 0.99", 
+                                             "1 - 1.99", "2+"), 
+                               right = FALSE)) 
+```
+This R Markdown document is made interactive using Shiny. Unlike the more traditional workflow of creating static reports, you can now create documents that allow your readers to change the assumptions underlying your analysis and see the results immediately. 
+
+To learn more, see [Interactive Documents](http://rmarkdown.rstudio.com/authoring_shiny.html).
+
+## Inputs and Outputs
+
+You can embed Shiny inputs and outputs in your document. Outputs are automatically updated whenever inputs change.  This demonstrates how a standard R plot can be made interactive by wrapping it in the Shiny `renderPlot` function. The `selectInput` and `sliderInput` functions create the input widgets used to drive the plot.
+
+```{r eruptions, echo=FALSE}
+# Define UI for app that draws a histogram ----
+ui <- fluidPage(
+
+  # App title ----
+  titlePanel("Three Oaks Farms Precipitation"),
+
+  # Sidebar layout with input and output definitions ----
+  sidebarLayout(
+
+    # Sidebar panel for inputs ----
+    sidebarPanel(
+
+      # Input: Slider for the number of bins ----
+      sliderInput(inputId = "year",
+                  label = "Year:",
+                  min = 2013,
+                  max = 2019,
+                  value = 2018)
+
+    ),
+
+    # Main panel for displaying outputs ----
+    mainPanel(
+
+      # Output: Histogram ----
+      plotOutput(outputId = "precip_bar")
+
+    )
+  )
+)
+```
+
+## Embedded Application
+
+It's also possible to embed an entire Shiny application within an R Markdown document using the `shinyAppDir` function. This example embeds a Shiny application located in another directory:
+
+```{r tabsets, echo=FALSE}
+# Define server logic required to draw a histogram ----
+server <- function(input, output) {
+
+  # Histogram of the Old Faithful Geyser Data ----
+  # with requested number of bins
+  # This expression that generates a histogram is wrapped in a call
+  # to renderPlot to indicate that:
+  #
+  # 1. It is "reactive" and therefore should be automatically
+  #    re-executed when inputs (input$bins) change
+  # 2. Its output type is a plot
+  output$distPlot <- renderPlot({
+    
+  filter(precip_clean$year == ) %>% 
+  group_by(month) %>%
+  rename("Precipitation Category" = precip_cat) %>% 
+  ggplot() +
+    geom_col(aes(x = month, y = precip, fill = `Precipitation Category`), 
+             color = "black") +
+    labs(x = "", y = "Precipitation Total (inches)", 
+         title = "Three Oaks Farms Precipitation", 
+         subtitle = year) +
+    theme_minimal() +
+    theme(axis.line = element_line(size = 1.2), 
+          panel.grid.major.y = element_line(size = 0.5, color = "black"), 
+          panel.grid.major.x = element_blank(), 
+          axis.text.x = element_text(size = 14, color = "black", angle = 15), 
+          axis.text.y = element_text(size = 14, color = "black"), 
+          title = element_text(size = 17, color = "black"), 
+          legend.text = element_text(size = 15)) +
+    scale_fill_brewer(palette = "Blues")
+
+}
+
+
+
+```
+
+Note the use of the `height` parameter to determine how much vertical space the embedded application should occupy.
+
+You can also use the `shinyApp` function to define an application inline rather then in an external directory.
+
+In all of R code chunks above the `echo = FALSE` attribute is used. This is to prevent the R code within the chunk from rendering in the document alongside the Shiny components.
+```{r}
+shinyApp(ui, server)
+```
+
+
+
