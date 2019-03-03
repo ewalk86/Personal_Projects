@@ -14,7 +14,7 @@ library(knitr)
 ```
 
 ```{r, message=FALSE, echo=FALSE}
-precip_data <- read_csv("farm_precip_26dec2018.csv")
+precip_data <- read_csv("farm_precip_3march2019.csv")
 ```
 
 ```{r, echo=FALSE}
