@@ -82,11 +82,10 @@ kable(summary_month, digits = 2)
 # Bar Plot
 precip_bar <- precip_clean %>% 
   group_by(month) %>%
-  rename("Precipitation Category" = precip_cat) %>%
   ggplot() +
-    geom_col(aes(x = month, y = precip, fill = `Precipitation Category`), 
+    geom_col(aes(x = month, y = precip, fill = precip_cat), 
              color = "black") +
-    labs(x = "", y = "Precipitation Total (inches)", 
+    labs(x = "", y = "Precipitation Total (inches)", fill = "Precipitation Category",
          title = "Three Oaks Farms Precipitation", 
          subtitle = "Combined Monthly Totals: 2013 - Present") +
     theme_minimal() +
@@ -109,11 +108,10 @@ precip_bar_function <- function(df = precip_clean, yr) {
 precip_bar <- df %>% 
   filter(year == yr) %>% 
   group_by(month) %>%
-  rename("Precipitation Category" = precip_cat) %>% 
   ggplot() +
-    geom_col(aes(x = month, y = precip, fill = `Precipitation Category`), 
+    geom_col(aes(x = month, y = precip, fill = precip_cat), 
              color = "black") +
-    labs(x = "", y = "Precipitation Total (inches)", 
+    labs(x = "", y = "Precipitation Total (inches)", fill = "Precipitation Category",
          title = "Three Oaks Farms Precipitation", 
          subtitle = yr) +
     theme_minimal() +

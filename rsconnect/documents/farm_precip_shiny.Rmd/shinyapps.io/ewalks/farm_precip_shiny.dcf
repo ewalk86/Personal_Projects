@@ -1,0 +1,12 @@
+name: farm_precip_shiny
+title: farm_precip_shiny
+username:
+account: ewalks
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 982880
+bundleId: 2156184
+url: https://ewalks.shinyapps.io/farm_precip_shiny/
+when: 1560640869.18621
+asMultiple: FALSE
+asStatic: FALSE
