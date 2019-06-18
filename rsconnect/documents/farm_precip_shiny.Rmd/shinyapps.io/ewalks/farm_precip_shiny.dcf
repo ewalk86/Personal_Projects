@@ -5,8 +5,8 @@ account: ewalks
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 982880
-bundleId: 2156184
+bundleId: 2160516
 url: https://ewalks.shinyapps.io/farm_precip_shiny/
-when: 1560640869.18621
+when: 1560829549.12471
 asMultiple: FALSE
 asStatic: FALSE
