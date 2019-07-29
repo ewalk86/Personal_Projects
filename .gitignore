@@ -7,4 +7,9 @@
 *.nb.html
 *.docx
 *.pdf
+<<<<<<< HEAD
 output/
+=======
+**/output
+**/input
+>>>>>>> 31e9d223eee71517f9f580c54f2d318f8448f50e
