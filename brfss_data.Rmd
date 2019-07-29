@@ -1,0 +1,82 @@
+---
+title: "BRFSS Data"
+author: "Ethan Walker"
+date: "July 29, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+#library(SASxport)
+library(tidyverse)
+```
+
+# Load database
+```{r}
+# brfss_data <- read_csv("C:/R/Personal_Projects/brfss_data_2017/brfss_data.csv")
+brfss_data <- read_rds("C:/R/Personal_Projects/output/brfss_data.rds")
+```
+
+# Initial look, clean data
+```{r}
+head(brfss_data, 10)
+
+clean_data <- brfss_data %>% 
+  spread(Question, Data_Value) %>% 
+  mutate(year = as.numeric(YearStart),
+         state_abb = LocationAbbr,
+         state = LocationDesc,
+         overweight = 
+           `Percent of adults aged 18 years and older who have an overweight classification`,
+         obese = 
+           `Percent of adults aged 18 years and older who have obesity`,
+         aerobic_activity_150_min =
+           `Percent of adults who achieve at least 150 minutes a week of moderate-intensity aerobic physical activity or 75 minutes a week of vigorous-intensity aerobic activity (or an equivalent combination)`,
+         aerobic_strength_activity_150_min =
+           `Percent of adults who achieve at least 150 minutes a week of moderate-intensity aerobic physical activity or 75 minutes a week of vigorous-intensity aerobic physical activity and engage in muscle-strengthening activities on 2 or more days a week`,
+         aerobic_activity_300_min =
+           `Percent of adults who achieve at least 300 minutes a week of moderate-intensity aerobic physical activity or 150 minutes a week of vigorous-intensity aerobic activity (or an equivalent combination)`,
+         strength_training_2_days =
+           `Percent of adults who engage in muscle-strengthening activities on 2 or more days a week`,
+         no_physical_activity =
+           `Percent of adults who engage in no leisure-time physical activity`,
+         fruit_less_than_daily = 
+           `Percent of adults who report consuming fruit less than one time daily`,
+         veg_less_than_daily =
+           `Percent of adults who report consuming vegetables less than one time daily`) %>% 
+  spread(StratificationCategory1, Stratification1) %>% 
+  mutate(age_cat = `Age (years)`,
+         education = Education,
+         gender = Gender,
+         income = Income,
+         race_eth = `Race/Ethnicity`,
+         total = Total,
+         cl_low = Low_Confidence_Limit,
+         cl_hi = High_Confidence_Limit,
+         sample_size = Sample_Size,
+         geo_location = GeoLocation) %>% 
+  select(year, state, state_abb, overweight, obese, aerobic_activity_150_min,
+         aerobic_strength_activity_150_min, aerobic_activity_300_min,
+         strength_training_2_days, no_physical_activity, fruit_less_than_daily,
+         veg_less_than_daily, age_cat, education, gender, income, race_eth,
+         total, cl_low, cl_hi, sample_size, geo_location)
+
+head(clean_data, 10)
+```
+
+# Filter and assess data
+```{r}
+co_data <- clean_data %>% 
+  filter(state_abb == "CO") %>% 
+  filter(total == "Total")
+```
+
+
+
+# Save original data as RDS
+```{r}
+saveRDS(brfss_data, "C:/R/Personal_Projects/output/brfss_data.rds")
+```
