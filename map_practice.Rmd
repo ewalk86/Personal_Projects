@@ -1,0 +1,175 @@
+---
+title: "Map Practice"
+author: "Ethan Walker"
+date: "July 30, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+```
+
+# Load libraries
+```{r, echo=FALSE}
+library(readxl)
+library(ggplot2)
+library(maps)
+library(mapdata)
+library(GISTools)
+library(tidyverse)
+library(mapproj)
+library(maps)
+library(fiftystater)
+```
+
+# Read in data
+```{r}
+evstations <- read_csv("input/evstations.csv")
+tesla <- read_xlsx("input/Tesla_State.xlsx")
+colorado_county_data_selected<-read_xlsx("input/colorado_county_data_selected.xlsx")
+data1<-colorado_county_data_selected 
+```
+
+# Cleaning data and merging datasets
+```{r}
+tesla$tesct<-tesla$Count
+evstations$evct<-evstations$count
+
+tesla$Count<-NULL
+evstations$count<-NULL
+
+evstations["stname"]<-NA
+names(evstations)
+evstations$stname<-state.name[match(evstations$State,state.abb)]
+evstations$stname[is.na(evstations$stname)] <- "District of Columbia"
+
+evstations$stcode<-evstations$State
+evstations$State<-NULL
+
+locd <- merge(tesla, evstations, by.x = "State", by.y = "stname")
+#view(locd)
+head(locd, 5)
+```
+
+# Base map of lower 48
+```{r}
+all_states <- map_data("state")
+
+locd$region <- sapply(locd$State, tolower)
+Total<-merge(all_states, locd, by="region")
+head(Total)
+
+#mapping
+p<-ggplot()
+p<-p +
+  geom_polygon(data=Total, aes(x=long, y=lat, group=group, fill=Total$evct), 
+               colour="white") +
+  scale_fill_continuous(low="thistle2", high="darkred",guide="colorbar")
+p
+
+p2<-ggplot()
+p2<-p2 +
+  geom_polygon(data=Total, aes(x=long, y=lat, group=group, fill=Total$tesct), colour=
+                      "black") +
+  scale_fill_continuous(low="white", high="purple",guide="colorbar")
+p2
+```
+
+# New projection and update to map
+```{r}
+#new projection to unflatten - mercater
+p22<-p2 +
+  coord_map()
+p22
+
+#new projection
+p23<-p2 +
+  coord_map("albers", lat0=30, lat1=40)
+p23
+
+data("fifty_states")
+p3<-ggplot(data=locd, aes(map_id=region)) + 
+  geom_map(aes(fill=locd$tesct), map=fifty_states) + 
+  expand_limits(x=fifty_states$long, y=fifty_states$lat) + 
+  coord_map()+ 
+  scale_x_continuous(breaks=NULL) + 
+  scale_y_continuous(breaks=NULL) + 
+  labs(x = "", y= "") + 
+  theme(legend.position = "bottom", panel.background = element_blank())
+p3
+
+#adding title
+p4<-p3 + 
+  ggtitle("Tesla Dealerships, United States 2017") 
+p4
+#rename scalebar title
+p5<-p4 +
+  labs(fill="Num. Dealerships")
+p5
+
+#choropleth and graduated markers
+p6<-ggplot()
+p6<-p6+geom_polygon(data=Total, aes(x=long, y=lat, group=group, fill=Total$evct), colour=
+                      "white") +
+  scale_fill_continuous(low="thistle2", high="darkred", guide="colorbar") + 
+  geom_point(data=Total, aes(x=long, y=lat, size=tesct, fill=tesct), shape=21, alpha=0.8) +
+  scale_size_continuous(range= c(2,8), breaks = waiver())
+#p6
+```
+
+# Further analysis
+```{r}
+#Scatterplot between state's level of EV charging stations and Tesla dealerships
+plot(locd$evct, locd$tesct, main="EV Stations vs. Tesla Dealerships", 
+     xlab="# EV Stations ", ylab="# Tesla Stations ", pch=19)
+#Correlation
+cor.test(locd$evct, locd$tesct)
+
+#Pull in CO counties
+counties<-map_data("county")
+co_county<-subset(counties, region=="colorado")
+#View(co_county)
+
+#Create new variable
+data1$subregion <- NA
+data1$subregion <- gsub(" County, Colorado","",data1$COUNTY)
+
+#Merge datasets
+data1$subregion2 <- sapply(data1$subregion, tolower)
+comap <- merge(co_county, data1, by.x = "subregion", by.y = "subregion2")
+#View(comap)
+head(comap, 5)
+
+#Plot map1
+comap1<-ggplot()
+comap1<-comap1 +
+  geom_polygon(data=comap, aes(x=long, y=lat, group=group, fill=comap$TOTPOP),
+                            colour="black")+
+  scale_fill_continuous(low="white", high="purple",guide="colorbar")
+comap1
+
+#adding title
+comap2<-comap1 + 
+  ggtitle("Total Population by County in CO") 
+comap2
+#rename scalebar title
+comap3<-comap2 +
+  labs(fill="Population")
+comap3
+
+
+#Plot map2
+comap4<-ggplot()
+comap4<-comap4 + 
+  geom_polygon(data=comap, aes(x=long, y=lat, group=group, fill=comap$POP_DENSITY_SQM_LAND),
+               colour="black") +
+  scale_fill_continuous(low="white", high="orange",guide="colorbar")
+comap4
+
+#adding title
+comap5<-comap4 + 
+  ggtitle("Population Density by Square Mile in CO") +
+  labs(fill="Pop Dens")
+comap5
+```
+
