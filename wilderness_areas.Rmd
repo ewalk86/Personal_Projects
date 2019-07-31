@@ -14,7 +14,6 @@ library(tidyverse)
 library(rgdal)
 library(maps)
 library(mapdata)
-library(plotly)
 ```
 
 # Load and format original data
@@ -30,15 +29,16 @@ peaks_data <- peaks %>%
   rename(name = Name, long = coords.x1, lat = coords.x2)
 # saved below to add "summited" variable
 
-###### Wilderness Areas
+##### Wilderness Areas
 
 # read in shape files
-shape <- readOGR(dsn = "input/Wilderness_Areas", layer = "Wilderness_Areas_5_31_19")
+shape <- readOGR(dsn = "input/S_USA.Wilderness", layer = "S_USA.Wilderness")
 
 # format wilderness shape files
 # make sure shape file has correct projection saved to it
 ## from projargs line under "shape" data description
-shape_2 <- spTransform(shape, CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +towgs84=0,0,0"))
+shape_2 <- spTransform(shape,
+                       CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"))
 
 # format the coordinates
 shape_coords <- fortify(shape_2) 
@@ -53,12 +53,12 @@ wilderness <- as.data.frame(shape_2)
 wilderness <- rownames_to_column(wilderness)
 # renaming rowname to id to join with coordinates data
 wilderness <- wilderness %>% 
-  mutate(id = as.numeric(rowname))
+  mutate(id = as.numeric(rowname)+1)
 
 joined <- coords %>% 
   # join coordinates with wilderness data
   left_join(wilderness, by = "id")  %>%
-  mutate(name = NAME) 
+  mutate(name = WILDERNE_1) 
 
 write_rds(joined, "output/wilderness_data.rds")
 
@@ -105,7 +105,7 @@ shape <- readOGR(dsn = "input/National_Park_Service__Park_Unit_Boundaries",
 # make sure shape file has correct projection saved to it
 ## from projargs line under "shape" data description
 shape_2 <- spTransform(shape, 
-                       CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
+                       CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"))
 
 # format the coordinates
 shape_coords <- fortify(shape_2) 
@@ -139,11 +139,12 @@ wilderness_names_co <- read_csv("input/wilderness_names_co.csv")
 peak_names <- read_csv("input/peak_names.csv") %>% 
   arrange(visited)
 
-
 # load map layers
-usa <- map_data("usa")
+#usa <- map_data("usa")
+
 states <- map_data("state")  %>% 
   filter(region == "colorado")
+
 cities <- maps::us.cities %>% 
   filter(country.etc == "CO") %>% 
   separate(name, c("city"), sep = " CO") %>% 
@@ -152,60 +153,65 @@ cities <- maps::us.cities %>%
   mutate(capital = factor(capital, levels = c(0,2), labels = c("no", "yes")))
 
 # load shape and point data saved above
-wilderness_data <- read_rds("output/wilderness_data.rds") %>% 
+wilderness_data <- read_rds("output/wilderness_data.rds") 
+
+wild_data <- wilderness_data %>% 
+  #filter(STATE == "CO") %>% 
   # join with areas i have visited
-  left_join(wilderness_names_co, by = "name") %>% 
-  filter(STATE == "CO") %>% 
+  right_join(wilderness_names_co, by = "name") %>% 
   mutate(type = "Wilderness Area") %>% 
   select(long, lat, order, piece, id, group, name, type, visited)
-nfs_data <- read_rds("output/nfs_data.rds") %>% 
-  separate(name, c("forest"), sep = " National Forest") %>% 
-  filter(forest == "Grand Mesa" | forest == "Arapaho" | forest == "Roosevelt" |
-         forest == "Uncompahgre" | forest == "Pike" | forest == "San Isabel" |
-         forest == "Routt" | forest == "Gunnison" | forest == "Rio Grande" |
-         forest == "San Juan" | forest == "White River") %>% 
+
+nfs_data <- read_rds("output/nfs_data.rds")
+
+forest_data <- nfs_data %>% 
+  separate(name, c("name"), sep = " National Forest") %>% 
+  filter(name == "Grand Mesa" | name == "Arapaho" | name == "Roosevelt" |
+         name == "Uncompahgre" | name == "Pike" | name == "San Isabel" |
+         name == "Routt" | name == "Gunnison" | name == "Rio Grande" |
+         name == "San Juan" | name == "White River") %>% 
   mutate(type = "National Forest",
-         name = forest,
-         visited = NA) %>% 
+         visited = "yes") %>%
   select(long, lat, order, piece, id, group, name, type, visited)
-nps_data <- read_rds("output/nps_data.rds") %>% 
+
+nps_data <- read_rds("output/nps_data.rds")
+
+park_data <- nps_data %>% 
   separate(name, c("name"), sep = " National Park") %>% 
   filter(name == "Rocky Mountain" | name == "Great Sand Dunes" |
          name == "Mesa Verde" | name == "Black Canyon of the Gunnison" |
          name == "Dinosaur" | name == "Colorado") %>% 
   mutate(type = "National Park/Monument",
          visited = NA) %>% 
+  mutate(visited = if_else(name == "Colorado", "no", "yes")) %>% 
   select(long, lat, order, piece, id, group, name, type, visited)
 
-poly_data <- rbind(wilderness_data, nfs_data, nps_data)
+poly_data <- rbind(wild_data, forest_data, park_data)
 
-peaks_data <- read_rds("output/peaks_data.rds")
+#peaks_data <- read_rds("output/peaks_data.rds")
 ```
 
 # Map the data
 ```{r}
-wilderness_map <- ggplot() + 
-  #geom_polygon(data = usa, aes(x=long, y = lat, group = group), 
-   #            fill = NA, color = "black") + 
+colorado_map <- ggplot() + 
   geom_polygon(data = states, aes(x=long, y = lat, group = group), 
-               fill=alpha('lightgreen', 0.15), color = "black", size = 1) + 
-  geom_polygon(data = poly_data, aes(x = long, y = lat, group = group,
-                                     fill = type, color = visited), 
-               size = 0.5) + 
+               fill=alpha('maroon', 0.45), color = "black", size = 1) + 
+  geom_polygon(data = poly_data, aes(x = long, y = lat, group = group, color = visited,
+                                     fill = type), size = 0.5) + 
   #geom_polygon(data = nps_data, aes(x = long, y = lat, group = group), 
    #            fill=alpha('gold', 0.5), color = "black", size = 0.25) + 
-  #geom_polygon(data = wilderness_data, aes(x = long, y = lat, group = group, 
+  #geom_polygon(data = wild_data, aes(x = long, y = lat, group = group, 
    #                               color = visited), fill = NA, size = 1) + 
   scale_fill_manual(values=c("lightgreen", "gold", "red")) +
   geom_point(data = cities, aes(x = long, y = lat), size = 2) +
   geom_text(data = cities, aes(x = long, y = lat, label = city), 
             size = 3, hjust = -.15) +
   geom_point(data = peak_names, aes(x = long, y = lat, color = visited), 
-             size = 3, shape = 17) +
-  scale_color_manual(values=c("black", "blue")) +
-  #coord_fixed(1.3)
+             size = 3, shape = 24, fill = "blue") +
+  scale_color_manual(values=c("black", "white")) +
+  #coord_fixed(1.3) +
   coord_map("mercator") +
-  ggtitle("Colorado Wilderness Areas and 14ers") +
+  ggtitle("Colorado Wild Areas and 14ers") +
   theme_minimal() +
   theme(panel.grid = element_blank(),
         axis.text = element_blank(),
@@ -214,7 +220,7 @@ wilderness_map <- ggplot() +
         plot.title = element_text(hjust = 0.5))
   
 
-wilderness_map
+colorado_map
 ```
 
 # Save wilderness and 14er names to csv
