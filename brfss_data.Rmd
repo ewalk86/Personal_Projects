@@ -6,76 +6,22 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
 
-```{r, message=FALSE}
-#library(SASxport)
+```{r, echo=FALSE}
 library(tidyverse)
 ```
 
-# Load database
-```{r, message=FALSE}
+```{r, echo=FALSE}
+# Load databases
+
 # brfss_data <- read_csv("C:/R/Personal_Projects/brfss_data_2017/brfss_data.csv")
-brfss_data <- read_rds("C:/R/Personal_Projects/output/brfss_data.rds")
+# brfss_data <- read_rds("output/brfss_data.rds")
 
-oregon_brfss_2014 <- read_csv("input/oregon_brfss_2014.csv")
+# oregon_brfss_2014 <- read_csv("input/oregon_brfss_2014.csv")
+oregon_brfss_2014 <- read_rds("output/oregon_brfss_2014.rds")
 ```
-
-# Initial look, clean drfss_data
-```{r}
-head(brfss_data, 10)
-
-clean_data <- brfss_data %>% 
-  spread(Question, Data_Value) %>% 
-  mutate(year = as.numeric(YearStart),
-         state_abb = LocationAbbr,
-         state = LocationDesc,
-         overweight = 
-           `Percent of adults aged 18 years and older who have an overweight classification`,
-         obese = 
-           `Percent of adults aged 18 years and older who have obesity`,
-         aerobic_activity_150_min =
-           `Percent of adults who achieve at least 150 minutes a week of moderate-intensity aerobic physical activity or 75 minutes a week of vigorous-intensity aerobic activity (or an equivalent combination)`,
-         aerobic_strength_activity_150_min =
-           `Percent of adults who achieve at least 150 minutes a week of moderate-intensity aerobic physical activity or 75 minutes a week of vigorous-intensity aerobic physical activity and engage in muscle-strengthening activities on 2 or more days a week`,
-         aerobic_activity_300_min =
-           `Percent of adults who achieve at least 300 minutes a week of moderate-intensity aerobic physical activity or 150 minutes a week of vigorous-intensity aerobic activity (or an equivalent combination)`,
-         strength_training_2_days =
-           `Percent of adults who engage in muscle-strengthening activities on 2 or more days a week`,
-         no_physical_activity =
-           `Percent of adults who engage in no leisure-time physical activity`,
-         fruit_less_than_daily = 
-           `Percent of adults who report consuming fruit less than one time daily`,
-         veg_less_than_daily =
-           `Percent of adults who report consuming vegetables less than one time daily`) %>% 
-  spread(StratificationCategory1, Stratification1) %>% 
-  mutate(age_cat = `Age (years)`,
-         education = Education,
-         gender = Gender,
-         income = Income,
-         race_eth = `Race/Ethnicity`,
-         total = Total,
-         cl_low = Low_Confidence_Limit,
-         cl_hi = High_Confidence_Limit,
-         sample_size = Sample_Size,
-         geo_location = GeoLocation) %>% 
-  select(year, state, state_abb, overweight, obese, aerobic_activity_150_min,
-         aerobic_strength_activity_150_min, aerobic_activity_300_min,
-         strength_training_2_days, no_physical_activity, fruit_less_than_daily,
-         veg_less_than_daily, age_cat, education, gender, income, race_eth,
-         total, cl_low, cl_hi, sample_size, geo_location)
-
-head(clean_data, 10)
-```
-
-# Filter and assess data
-```{r}
-co_data <- clean_data %>% 
-  filter(state_abb == "CO") %>% 
-  filter(total == "Total")
-```
-
 
 # Initial look, clean oregon_brfss_2014
 ```{r}
@@ -125,9 +71,12 @@ clean_data_oregon <- oregon_brfss_2014 %>%
          bmi = as.numeric(bmi),
          bmi_cat = factor(bmi_cat, levels = c(1,2,3,4),
                           labels = c("underweight", "normal", "overweight", "obese")))
+
+head(clean_data_oregon, 5)
 ```
 
 # Check data
+## Compare numbers in each factor to make sure levels/NAs were coded correctly
 ```{r}
 table(clean_data_oregon$age_cat)
 table(oregon_brfss_2014$`@_AGE_G`)
@@ -169,15 +118,19 @@ table(clean_data_oregon$bmi_cat)
 table(oregon_brfss_2014$`@_BMI5CAT`)
 ```
 
-# Tables and plots
+# Function for plotting each categorical variable
 ```{r}
 hist_function <- function(df = clean_data_oregon, var) {
 hist_plot <- df %>% 
   rename(result = var) %>% 
   ggplot(aes(result)) +
-    geom_bar(fill = "red") +
+    geom_bar(stat = "count", fill = "steelblue", color = "black") +
+    geom_text(stat = "count", aes(label = ..count..), vjust = -0.5, size = 5) +
+    ggtitle("Sample of Oregon BRFSS Data from 2014",
+            subtitle = "Count data for categorical variables") +
     xlab(var) +
     theme_minimal() +
+    scale_y_continuous(expand = expand_scale(add = c(20, 100))) +
     theme(axis.line = element_line(size = 1.2), 
           panel.grid.major.y = element_line(size = 0.5, color = "black"), 
           panel.grid.major.x = element_blank(), 
@@ -186,8 +139,7 @@ hist_plot <- df %>%
           axis.text.y = element_text(size = 14, color = "black"), 
           axis.title.y = element_text(size = 16,
                                       margin = margin(t = 0, r = 20, b = 0, l = 0)),
-          title = element_text(size = 16, color = "black"), 
-          legend.text = element_text(size = 15)) 
+          title = element_text(size = 16, color = "black")) 
 hist_plot
 }
 
@@ -208,7 +160,64 @@ hist_function(clean_data_oregon, var = "bmi_cat")
 
 
 
+```{r, echo=FALSE, eval=FALSE}
+# Initial look, clean brfss_data
+head(brfss_data, 10)
+
+clean_data <- brfss_data %>% 
+  spread(Question, Data_Value) %>% 
+  mutate(year = as.numeric(YearStart),
+         state_abb = LocationAbbr,
+         state = LocationDesc,
+         overweight = 
+           `Percent of adults aged 18 years and older who have an overweight classification`,
+         obese = 
+           `Percent of adults aged 18 years and older who have obesity`,
+         aerobic_activity_150_min =
+           `Percent of adults who achieve at least 150 minutes a week of moderate-intensity aerobic physical activity or 75 minutes a week of vigorous-intensity aerobic activity (or an equivalent combination)`,
+         aerobic_strength_activity_150_min =
+           `Percent of adults who achieve at least 150 minutes a week of moderate-intensity aerobic physical activity or 75 minutes a week of vigorous-intensity aerobic physical activity and engage in muscle-strengthening activities on 2 or more days a week`,
+         aerobic_activity_300_min =
+           `Percent of adults who achieve at least 300 minutes a week of moderate-intensity aerobic physical activity or 150 minutes a week of vigorous-intensity aerobic activity (or an equivalent combination)`,
+         strength_training_2_days =
+           `Percent of adults who engage in muscle-strengthening activities on 2 or more days a week`,
+         no_physical_activity =
+           `Percent of adults who engage in no leisure-time physical activity`,
+         fruit_less_than_daily = 
+           `Percent of adults who report consuming fruit less than one time daily`,
+         veg_less_than_daily =
+           `Percent of adults who report consuming vegetables less than one time daily`) %>% 
+  spread(StratificationCategory1, Stratification1) %>% 
+  mutate(age_cat = `Age (years)`,
+         education = Education,
+         gender = Gender,
+         income = Income,
+         race_eth = `Race/Ethnicity`,
+         total = Total,
+         cl_low = Low_Confidence_Limit,
+         cl_hi = High_Confidence_Limit,
+         sample_size = Sample_Size,
+         geo_location = GeoLocation) %>% 
+  select(year, state, state_abb, overweight, obese, aerobic_activity_150_min,
+         aerobic_strength_activity_150_min, aerobic_activity_300_min,
+         strength_training_2_days, no_physical_activity, fruit_less_than_daily,
+         veg_less_than_daily, age_cat, education, gender, income, race_eth,
+         total, cl_low, cl_hi, sample_size, geo_location)
+
+head(clean_data, 10)
+```
+
+
+```{r, echo=FALSE, eval=FALSE}
+# Filter and assess data
+co_data <- clean_data %>% 
+  filter(state_abb == "CO") %>% 
+  filter(total == "Total")
+```
+
+
 # Save original data as RDS
-```{r}
+```{r, echo=FALSE, eval=FALSE}
 saveRDS(brfss_data, "C:/R/Personal_Projects/output/brfss_data.rds")
+saveRDS(oregon_brfss_2014, "C:/R/Personal_Projects/output/oregon_brfss_2014.rds")
 ```
