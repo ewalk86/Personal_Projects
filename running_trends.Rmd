@@ -1,0 +1,76 @@
+---
+title: "Running trends"
+output:
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      eval = TRUE, include = TRUE)
+```
+
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+library(tidyverse)
+library(lubridate)
+library(forcats)
+library(knitr)
+library(readxl)
+```
+
+```{r, message=FALSE, echo=FALSE}
+running_initial <- read_xlsx("Input/running_18april2020.xlsx", skip = 1,
+                             col_names = c("date", "miles", "hike_miles",
+                                           "type", "long_target",
+                                           "skip2", "week_target",
+                                           "skip4", "skip5", "skip6", "skip7"),
+                             col_types = c("date", "numeric", "numeric",
+                                           "text", "numeric",
+                                           "text", "numeric",
+                                           "text", "text", "text", "text"))
+```
+
+```{r}
+running_clean <- running_initial %>% 
+  mutate(long_target = lead(long_target),
+         week_target = lead(week_target)) %>% 
+  filter(!is.na(date)) %>% 
+  mutate(date = ymd(date),
+         miles = if_else(!is.na(hike_miles), hike_miles, miles),
+         day_of_week = weekdays(date),
+         month_of_year = months(date),
+         week_of_year = epiweek(date)) %>% 
+  filter(!is.na(miles)) %>% 
+  select(-starts_with("skip"), -hike_miles) %>% 
+  group_by(week_of_year) %>% 
+  fill(c("long_target", "week_target"), .direction = "up") %>% 
+  mutate(long_actual = max(miles),
+         type = if_else(is.na(type), "run", type),
+         week_total = sum(miles),
+         long_diff = long_actual - long_target,
+         week_diff = week_total - week_target) %>% 
+  ungroup() %>% 
+  mutate(cum_miles = cumsum(miles)) %>% 
+  arrange(date)
+```
+
+```{r}
+date_plot <- running_clean %>% 
+  ggplot() +
+    geom_area(aes(date, cum_miles), fill = "red") +
+    theme_minimal() +
+    labs(title = "Cumulative Running Total") +
+    theme(axis.title = element_blank())
+date_plot
+```
+
+```{r}
+long_total_weeks <- running_clean %>% 
+  group_by(week_of_year) %>% 
+  distinct(week_of_year, .keep_all = TRUE) %>% 
+  ggplot() +
+    geom_area(aes(date, week_total), fill = "blue") +
+    geom_area(aes(date, long_actual), fill = "red") +
+    theme_minimal()
+long_total_weeks
+```
+

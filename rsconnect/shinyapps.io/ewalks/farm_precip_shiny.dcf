@@ -1,0 +1,13 @@
+name: farm_precip_shiny
+title:
+username:
+account: ewalks
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 982880
+bundleId: 2698253
+url: https://ewalks.shinyapps.io/farm_precip_shiny/
+when: 1577728010.96204
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: brfss_data.pdf|brfss_data.Rmd|colorado_map.pdf|farm_precip.Rmd|farm_precip_30dec2019.pdf|farm_precip_3march2019.pdf|farm_precip_shiny.Rmd|farm_precip16june2019.pdf|map_practice.pdf|map_practice.Rmd|README.md|wilderness_areas.nb.html|wilderness_areas.Rmd|input|output
