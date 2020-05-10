@@ -18,7 +18,7 @@ library(readxl)
 ```
 
 ```{r, message=FALSE, echo=FALSE}
-running_initial <- read_xlsx("Input/running_18april2020.xlsx", skip = 1,
+running_initial <- read_xlsx("Input/running_10may2020.xlsx", skip = 1,
                              col_names = c("date", "miles", "hike_miles",
                                            "type", "long_target",
                                            "skip2", "week_target",
@@ -51,6 +51,25 @@ running_clean <- running_initial %>%
   ungroup() %>% 
   mutate(cum_miles = cumsum(miles)) %>% 
   arrange(date)
+```
+
+```{r}
+overall_summary <- running_clean %>% 
+  summarize("# Runs" = n(),
+            "Mean miles per run" = mean(miles, na.rm = TRUE),
+            "SD miles per run" = sd(miles, na.rm = TRUE),
+            "Long run" = max(miles, na.rm = TRUE),
+            "Median miles per run" = median(miles, na.rm = TRUE))
+overall_summary
+
+grouped_summary <- running_clean %>% 
+  group_by(type) %>% 
+  summarize("# Runs" = n(),
+            "Mean miles per run" = mean(miles, na.rm = TRUE),
+            "SD miles per run" = sd(miles, na.rm = TRUE),
+            "Long run" = max(miles, na.rm = TRUE),
+            "Median miles per run" = median(miles, na.rm = TRUE))
+grouped_summary
 ```
 
 ```{r}
