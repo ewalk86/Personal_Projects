@@ -14,7 +14,7 @@ library(knitr)
 ```
 
 ```{r, message=FALSE, echo=FALSE}
-precip_data <- read_csv("input/farm_precip_30dec2019.csv")
+precip_data <- read_csv("input/farm_precip_7nov2020.csv")
 ```
 
 ```{r, echo=FALSE}
@@ -133,6 +133,7 @@ precip_bar_function(precip_clean, "2016")
 precip_bar_function(precip_clean, "2017")
 precip_bar_function(precip_clean, "2018")
 precip_bar_function(precip_clean, "2019")
+precip_bar_function(precip_clean, "2020")
 ```
 
 ```{r, echo=FALSE, fig.width=10, fig.height=8}

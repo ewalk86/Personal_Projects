@@ -21,7 +21,7 @@ library(rmarkdown)
 ```
 
 ```{r, message=FALSE, echo=FALSE}
-precip_data <- read_csv("input/farm_precip_30dec2019.csv")
+precip_data <- read_csv("input/farm_precip_7nov2020.csv")
 ```
 
 ```{r, echo=FALSE}
@@ -60,7 +60,7 @@ ui <- fluidPage(
 
       selectInput(inputId = "year",
                   label = "Year:",
-                  choices = c(2013, 2014, 2015, 2016, 2017, 2018, 2019))
+                  choices = c(2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020))
     ),
 
     mainPanel(width = 10,
