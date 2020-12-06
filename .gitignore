@@ -10,3 +10,4 @@
 /input
 *.log
 farm_precip.log
+mt_covid.R
