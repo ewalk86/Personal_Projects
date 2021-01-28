@@ -14,7 +14,7 @@ library(knitr)
 ```
 
 ```{r, message=FALSE, echo=FALSE}
-precip_data <- read_csv("input/farm_precip_7nov2020.csv")
+precip_data <- read_csv("input/farm_precip_31dec2020.csv")
 ```
 
 ```{r, echo=FALSE}
@@ -30,35 +30,37 @@ precip_clean <- precip_data %>%
 ```
 ##Summary Statistics
 ###Summary by Year
-```{r, echo=FALSE}
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
 summary_by_year <- precip_clean %>% 
   group_by(year) %>% 
   summarise(sum(precip), n(), mean(precip), median(precip), max(precip)) %>% 
   rename(Year = year, `Total Precip` = `sum(precip)`, `Precip Events` = `n()`, 
          `Mean Precip Event` = `mean(precip)`, `Median Precip Event` = `median(precip)`, 
-         `Max Precip Event` = `max(precip)`)
+         `Max Precip Event` = `max(precip)`) %>% 
+  ungroup()
 kable(summary_by_year, digits = 2)
 ```
 
 ###Summary by Month
-```{r, echo=FALSE}
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
 summary_by_month <- precip_clean %>% 
   group_by(month) %>% 
   summarise(sum(precip), n(), mean(precip), median(precip), max(precip)) %>% 
   rename(Month = month, `Total Precip` = `sum(precip)`, `Precip Events` = `n()`, 
          `Mean Precip Event` = `mean(precip)`, `Median Precip Event` = `median(precip)`, 
-         `Max Precip Event` = `max(precip)`)
+         `Max Precip Event` = `max(precip)`) %>% 
+  ungroup()
 kable(summary_by_month, digits = 2)
 ```
 
 ###Summary by Month and Year
-```{r, echo=FALSE}
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
 summary_by_month <- precip_clean %>% 
   group_by(year, month) %>% 
   summarise(sum(precip), n(), mean(precip), median(precip), max(precip)) %>% 
   rename(Year = year, Month = month, `Total Precip` = `sum(precip)`, `Precip Events` = `n()`, 
          `Mean Precip Event` = `mean(precip)`, `Median Precip Event` = `median(precip)`, 
-         `Max Precip Event` = `max(precip)`)
+         `Max Precip Event` = `max(precip)`) 
 kable(summary_by_month, digits = 2)
 ```
 
@@ -73,7 +75,7 @@ summary_month <- precip_clean %>%
   mutate(month_mean = month_sum / year_num) %>% 
   select(month, month_mean) %>% 
   distinct(month, month_mean) %>% 
-  rename(Month = month, `Monthly Average` = month_mean)
+  rename(Month = month, `Monthly Average` = month_mean) 
 kable(summary_month, digits = 2)
 ```
 

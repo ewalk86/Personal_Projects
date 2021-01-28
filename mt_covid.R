@@ -143,7 +143,7 @@ county_function <- function(county_name, data = state_data_clean){
     ungroup() %>% 
     fill(county, .direction = c("downup")) %>% 
     fill(region, .direction = c("downup")) %>% 
-    select(-case_no, -age_group, -sex, -mt_case)
+    select(-case_no, -age_group_new, -sex, -mt_case)
   
   county_data_final <- cbind(county_data_new, county_cases) 
   
